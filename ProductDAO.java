@@ -1,63 +1,130 @@
-public class Product {
-    private int id;
-    private String productName;
-    private String category;
-    private int quantity;
-    private double price;
-    private int minStockLevel;
-    private int supplierId;
-    private String supplierName;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
-    public Product() {}
+public class ProductDAO {
 
-    public Product(String productName, int quantity, double price) {
-        this.productName = productName;
-        this.quantity = quantity;
-        this.price = price;
-        this.category = "General";
-        this.minStockLevel = 10;
+    public static boolean addProduct(Product product) {
+        String sql = "INSERT INTO products (product_name, category, quantity, price, min_stock_level, supplier_id) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            if (con == null) return false;
+
+            ps.setString(1, product.getProductName());
+            ps.setString(2, product.getCategory() != null ? product.getCategory() : "General");
+            ps.setInt(3, product.getQuantity());
+            ps.setDouble(4, product.getPrice());
+            ps.setInt(5, product.getMinStockLevel() > 0 ? product.getMinStockLevel() : 10);
+            
+            if (product.getSupplierId() > 0) {
+                ps.setInt(6, product.getSupplierId());
+            } else {
+                ps.setNull(6, java.sql.Types.INTEGER);
+            }
+
+            int rows = ps.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
-    public Product(int id, String productName, String category, int quantity, double price, int minStockLevel, int supplierId) {
-        this.id = id;
-        this.productName = productName;
-        this.category = category;
-        this.quantity = quantity;
-        this.price = price;
-        this.minStockLevel = minStockLevel;
-        this.supplierId = supplierId;
+    public static List<Product> getAllProducts() {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT p.*, s.supplier_name FROM products p LEFT JOIN suppliers s ON p.supplier_id = s.id ORDER BY p.id DESC";
+        try (Connection con = DBConnection.getConnection();
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (con == null) return list;
+
+            while (rs.next()) {
+                Product p = new Product(
+                    rs.getInt("id"),
+                    rs.getString("product_name"),
+                    rs.getString("category"),
+                    rs.getInt("quantity"),
+                    rs.getDouble("price"),
+                    rs.getInt("min_stock_level"),
+                    rs.getInt("supplier_id")
+                );
+                p.setSupplierName(rs.getString("supplier_name"));
+                list.add(p);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
-    public Product(String productName, String category, int quantity, double price, int minStockLevel, int supplierId) {
-        this.productName = productName;
-        this.category = category;
-        this.quantity = quantity;
-        this.price = price;
-        this.minStockLevel = minStockLevel;
-        this.supplierId = supplierId;
+    public static Product getProductById(int id) {
+        String sql = "SELECT p.*, s.supplier_name FROM products p LEFT JOIN suppliers s ON p.supplier_id = s.id WHERE p.id = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            if (con == null) return null;
+
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Product p = new Product(
+                    rs.getInt("id"),
+                    rs.getString("product_name"),
+                    rs.getString("category"),
+                    rs.getInt("quantity"),
+                    rs.getDouble("price"),
+                    rs.getInt("min_stock_level"),
+                    rs.getInt("supplier_id")
+                );
+                p.setSupplierName(rs.getString("supplier_name"));
+                return p;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public static boolean updateProduct(Product product) {
+        String sql = "UPDATE products SET product_name=?, category=?, quantity=?, price=?, min_stock_level=?, supplier_id=? WHERE id=?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
-    public String getProductName() { return productName; }
-    public void setProductName(String productName) { this.productName = productName; }
+            if (con == null) return false;
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+            ps.setString(1, product.getProductName());
+            ps.setString(2, product.getCategory());
+            ps.setInt(3, product.getQuantity());
+            ps.setDouble(4, product.getPrice());
+            ps.setInt(5, product.getMinStockLevel());
+            if (product.getSupplierId() > 0) {
+                ps.setInt(6, product.getSupplierId());
+            } else {
+                ps.setNull(6, java.sql.Types.INTEGER);
+            }
+            ps.setInt(7, product.getId());
 
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
-    public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
+    public static boolean deleteProduct(int id) {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
-    public int getMinStockLevel() { return minStockLevel; }
-    public void setMinStockLevel(int minStockLevel) { this.minStockLevel = minStockLevel; }
+            if (con == null) return false;
 
-    public int getSupplierId() { return supplierId; }
-    public void setSupplierId(int supplierId) { this.supplierId = supplierId; }
-
-    public String getSupplierName() { return supplierName; }
-    public void setSupplierName(String supplierName) { this.supplierName = supplierName; }
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
