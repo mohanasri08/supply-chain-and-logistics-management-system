@@ -9,6 +9,7 @@
 <body>
 
 <div class="app-container">
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="brand">📦 SupplyChain Pro</div>
         <ul class="nav-links">
@@ -22,6 +23,7 @@
         </ul>
     </aside>
 
+    <!-- Main Content -->
     <main class="main-content">
         <header style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
             <div>
@@ -31,24 +33,67 @@
             <button onclick="window.location.href='dashboard.html'" class="btn-secondary btn-sm">← Back to Dashboard</button>
         </header>
 
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Order History & Fulfillment</h2>
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+            <!-- Create Order Form -->
+            <div class="card">
+                <h2 class="card-title" style="margin-bottom: 16px;">Place New Sales Order</h2>
+                <div id="order-alert" class="alert"></div>
+
+                <form id="add-order-form" onsubmit="handleCreateOrder(event)">
+                    <div class="form-group">
+                        <label for="customer_name">Customer Name *</label>
+                        <input type="text" id="customer_name" name="customer_name" placeholder="e.g. Metro Retail Inc" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer_email">Customer Email</label>
+                        <input type="email" id="customer_email" name="customer_email" placeholder="orders@customer.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shipping_address">Shipping Address *</label>
+                        <textarea id="shipping_address" name="shipping_address" rows="3" placeholder="Full delivery address..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="total_amount">Order Value ($) *</label>
+                        <input type="number" step="0.01" id="total_amount" name="total_amount" placeholder="e.g. 1499.99" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Initial Status</label>
+                        <select id="status" name="status">
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                        </select>
+                    </div>
+
+                    <button type="submit">Create Sales Order in MySQL</button>
+                </form>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Order #</th>
-                        <th>Customer</th>
-                        <th>Date</th>
-                        <th>Fulfillment Status</th>
-                        <th>Total Amount</th>
-                    </tr>
-                </thead>
-                <tbody id="orders-table-body">
-                    <tr><td colspan="5" style="text-align:center;">Loading customer orders...</td></tr>
-                </tbody>
-            </table>
+
+            <!-- Orders Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Order History & Fulfillment</h2>
+                    <button onclick="loadOrders()" class="btn-sm btn-secondary">🔄 Refresh</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Fulfillment Status</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <tr><td colspan="5" style="text-align:center;">Loading customer orders...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
 </div>
